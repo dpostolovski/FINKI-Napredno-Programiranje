@@ -1,0 +1,33 @@
+    
+    	<p>Треба да се развие класа за администрација на чет‐систем(chat). Системот се состои од повеќе чет‐соби, објекти од класата <strong>ChatRoom</strong>. Во <strong>ChatRoom</strong> ги чуваме името на собата и имињата на корисниците кои тековно се наоѓаат во таа соба (за корисниците да се користи соодветен <strong>Set</strong>).</p>
+
+<ul>
+<li><code>ChatRoom(String name)</code> ‐ креира нова празна соба за чет (празна значи без корисници). </li>
+<li><code>addUser(String username)</code> - го додава корисникот со тоа име во собата. </li>
+<li><code>removeUser(String username)</code> - го отстранува корисникот со тоа име од собата доколку има таков, во спротивно не прави ништо. </li>
+<li><code>toString():String</code> - враќа стринг кои ги содржи името на собата и сите корисници кои се во собата секој одделен со нов ред. Корисниците се подредени алфабетски. Ако собата е празна се враќа името на собата во еден ред, а во вториот ред стрингот "EMPTY" (наводници само за појаснување). </li>
+<li><code>hasUser(String username):boolean</code> - враќа true ако постои корисник со тоа име во собата. </li>
+<li><code>numUsers():int</code> - го враќа бројот на корисници во собата. </li>
+</ul>
+
+<p>Главната  класа <strong>ChatSystem</strong>  ги  содржи  сите  соби  и  сите  орисници. Корисниците може да се членови на една, повеќе или да не се членови на ниедна соба. За менаџмент на собите треба да ги понудите следните три методи:</p>
+
+<ul>
+<li><code>addRoom(String roomName)</code> - додава нова празна соба во листата на соби. </li>
+<li><code>removeRoom(String roomName)</code> - ја отстранува собата од листата. </li>
+<li><code>getRoom(String roomName):ChatRoom</code> - го враќа објектот кој ја претставува собата со име <code>roomName</code>. Фрлете <code>NoSuchRoomException(roomName)</code> доколку не постои соба со тоа име.</li>
+</ul>
+
+<p><strong>Забелешка</strong>: Собите чувајте ги во <strong>TreeMap</strong> за да бидат секогаш подредени по нивното име.</p>
+
+<p>Дополнително во класата ChatSystem постојат следните методи за работа со корисниците:</p>
+
+<ul>
+<li><code>ChatSystem()</code> - default constructor </li>
+<li><code>register(String userName)</code> - го регистрира корисникот во системот. Го додава во собата со најмалку корисници. Доколку има повеќе такви соби тогаш го додава во првата соба по лексикоргафско подредување.</li>
+<li><code>registerAndJoin(String userName, String roomName)</code> - го регистрира корисникот во системот. Дополнително го додава во собата со име <code>roomName</code>. </li>
+<li><code>joinRoom(String userName, String roomName)</code> - го  додава  корисникот  во  собата  со соодветно  име  доколку  таа  постои,  во  спротивно  фрла  исклучок  од  типот <code>NoSuchRoomExcеption(roomName)</code>. Ако не постои регистриран корисник со тоа име се фрла исклучок <code>NoSuchUserException(userName)</code>.</li>
+<li><code>leaveRoom(String username, String roomName)</code> - го отстранува корисникот од собата со соодветно  име  доколку  таа  постои.  во  спротивно  фрла  исклучок  од  типот <code>NoSuchRoomExcеption(roomName)</code>. Ако не постои регистриран корисник со тоа име се фрла исклучок <code>NoSuchUserException(userName)</code>.</li>
+<li>followFriend(String username, String friend_username) – корисникот со име username го приклучува во сите соби во кој е член корисникот со име <code>friendUsername</code>. Ако не постои регистриран корисник со тоа име се фрла исклучок <code>NoSuchUserException(userName)</code>.</li>
+</ul>
+    

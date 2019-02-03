@@ -1,0 +1,25 @@
+    
+    	<p>Треба да се развие класа <code>Timestamp</code> која претставува пар на објекти од кои едниот е секогаш од тип <code>LocalDateTime</code>, а другиот објект е од генеричкиот тип <code>T</code>. Класата <code>Timestamp</code> ги нуди следниве функционалности:</p>
+
+<ul>
+<li><code>Timestamp(LocalDateTime time, T element)</code> - конструктор</li>
+<li><code>getTime():LocalDateTime</code></li>
+<li><code>getElement():T</code></li>
+<li><code>compareTo(Timestamp<?> t):int</code> - споредувањето се прави само врз основа на времињата </li>
+<li><code>equals(Object o):boolean</code> - враќа <code>true</code> ако се исти времињата</li>
+<li><code>toString() :String</code> - враќа стринг репрезентација со времето (toString) и елементот во формат <code>time element</code></li>
+</ul>
+
+<p><strong>Забелешка</strong>: двете променливи <code>time</code> и <code>element</code> мора да бидат обележани како <code>final</code>.</p>
+
+<p>Класата <code>Timestamp</code> сега треба да се искористи за да се развие класа <code>Scheduler</code>. Оваа класа чува повеќе објекти од класата <code>Timestamp</code> и исто така има еден генерички параметар <code>T</code> кој всушност се однесува на типот на објект кој се наоѓа во <code>Timestamp</code>. Класата <code>Scheduler</code> треба да ги имплементира следниве методи:</p>
+
+<ul>
+<li><code>Scheduler()</code> - креира нов празен распоредувач</li>
+<li><code>add(Timestamp<T> t)</code> - додава  нов објект во распоредувачот</li>
+<li><code>remove(Timestamp<T> t):boolean</code> - го брише соодветниот елемент од распоредувачот доколку постои и враќа true, во спротивно враќа false</li>
+<li><code>next():Timestamp<T></code> - го враќа следниот <code>Timestamp</code> објект, односно тој објект чие што време е најблиску до тековното (сега) и сѐ уште НЕ е поминато</li>
+<li><code>last():Timestamp<T></code> - го враќа објектот кој има време најблиску до тековното (сега) и веќе E поминат</li>
+<li><code>getAll(LocalDateTime begin, LocalDateTime end):List<Timestamp<T>></code> - враќа листа на настани чии времиња се наоѓаат помеѓу <code>begin</code> и <code>end</code> (не вклучувајќи ги <code>begin</code> и <code>end</code>).</li>
+</ul>
+    
