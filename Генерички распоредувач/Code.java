@@ -1,8 +1,141 @@
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.stream.*;
+
+class Timestamp<T> implements Comparable<Timestamp<?> >
+{
+
+    private final LocalDateTime time;
+    private final T element;
+
+    public Timestamp()
+    {
+        time=null;
+        element=null;
+    }
+
+    public Timestamp(LocalDateTime time, T element)
+    {
+        this.time=time;
+        this.element=element;
+    }
+
+    public LocalDateTime getTime()
+    {
+        return time;
+    }
+
+    public T getElement()
+    {
+        return element;
+    }
+
+    @Override
+
+    public boolean equals(Object o)
+    {
+        if(!(o instanceof Timestamp<?>))
+            return false;
+        else
+        {
+            Timestamp<?> tmp=(Timestamp<?>)o;
+            return (this.time.equals(tmp.time)); //&& this.element.equals(tmp.element));
+        }
+    }
+
+    @Override
+
+    public int compareTo(Timestamp<?> t)
+    {
+        return this.time.compareTo(t.time);
+    }
+
+    @Override
+
+    public String toString()
+    {
+        StringBuilder sb=new StringBuilder();
+
+        sb.append(time.toString());
+        sb.append(" ");
+        sb.append(element.toString());
+
+        return sb.toString();
+    }
+
+
+
+}
+
+class Scheduler<T>
+{
+    private List<Timestamp<T> > timestamps;
+
+    public Scheduler()
+    {
+        this.timestamps=new ArrayList<Timestamp<T> >();
+    }
+
+    public void add(Timestamp<T> t)
+    {
+        timestamps.add(t);
+    }
+
+    public Timestamp<T> contains(Timestamp<T> t)
+    {
+        return timestamps.stream()
+                .filter(e -> e.equals(t))
+                .findFirst()
+                .get();
+
+
+    }
+
+    public boolean remove(Timestamp<T> t)
+    {
+        Timestamp<T> temp=this.contains(t);
+
+        if(temp==null)
+            return false;
+        else
+        {
+            timestamps.remove(t);
+            return true;
+        }
+    }
+
+    public Timestamp<T> next()
+    {
+        return timestamps.stream()
+                .filter(e -> e.compareTo(new Timestamp<Integer>(LocalDateTime.now(), 0))>0)
+                .min((x, y)-> x.compareTo(y))
+                .get();
+    }
+
+    public Timestamp<T> last()
+    {
+        return timestamps.stream()
+                .filter(e -> e.compareTo(new Timestamp<Integer>(LocalDateTime.now(), 0))<0)
+                .max((x, y)-> x.compareTo(y))
+                .get();
+    }
+
+    public List<Timestamp<T> > getAll(LocalDateTime begin, LocalDateTime end)
+    {
+        return timestamps.stream()
+                .filter(e -> e.compareTo(new Timestamp<Integer>(begin, 0))>0&&e.compareTo(new Timestamp<Integer>(end, 0))<=0)
+                .collect(Collectors.toList());
+    }
+}
 
 public class SchedulerTest {
 
@@ -109,77 +242,5 @@ public class SchedulerTest {
 
 }
 
-class Timestamp<T> implements Comparable< Timestamp<?> >
-{
-    protected final LocalDateTime time;
-    protected final T element;
-
-    public Timestamp(LocalDateTime time, T element) {
-        this.time = time;
-        this.element = element;
-    }
-
-    public final LocalDateTime getTime() {
-        return time;
-    }
-
-    public final T getElement(){
-        return element;
-    }
-
-    @Override
-    public int compareTo(Timestamp<?> t) {
-        return time.compareTo(t.time);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        Timestamp<T> t = (Timestamp<T>) o;
-        return time.equals(t.time);
-        //return time.equals(t.time)&&element.equals(((Timestamp<T>) o).element);
-    }
-
-    @Override
-    public String toString()
-    {
-        return time.toString() + " " + element.toString();
-    }
-}
-
-class Scheduler<T>
-{
-    protected SortedSet< Timestamp<T> > timestamps;
-
-    public Scheduler() {
-        this.timestamps = new TreeSet<>();
-    }
-
-    public void add(Timestamp<T> t)
-    {
-        timestamps.add(t);
-    }
-
-    public boolean remove(Timestamp<T> t)
-    {
-        return timestamps.remove(t);
-    }
-
-    public Timestamp<T> next()
-    {
-        return timestamps.tailSet( new Timestamp<>(LocalDateTime.now(),null ) ).first();
-    }
-
-    public Timestamp<T> last()
-    {
-        return timestamps.headSet(new Timestamp<>(LocalDateTime.now(), null)).last();
-    }
-
-    public List<Timestamp<T>> getAll(LocalDateTime begin, LocalDateTime end)
-    {
-        return timestamps.subSet( new Timestamp<T>(begin,null), new Timestamp<T>(end, null) ).stream().collect(Collectors.toList());
-    }
-
-
-}
-
+// vashiot kod ovde
 

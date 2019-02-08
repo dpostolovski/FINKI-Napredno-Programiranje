@@ -1,94 +1,134 @@
-import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.text.DecimalFormat;
+
+class ComplexNumber<T extends Number, U extends Number> implements Comparable<ComplexNumber<?, ?> >
+{
+    private T real;
+    private U imaginary;
+    
+    public ComplexNumber()
+    {
+        
+    }
+    
+    public ComplexNumber(T real, U imaginary)
+    {
+        //this();
+        
+        this.real=real;
+        this.imaginary=imaginary;
+        
+    }
+    
+    public T getReal()
+    {
+        return real;
+    }
+    
+    public U getImaginary()
+    {
+        return imaginary;
+    }
+    
+    public Double modul()
+    {
+        return Math.sqrt(real.doubleValue()*real.doubleValue()+imaginary.doubleValue()*imaginary.doubleValue());
+    }
+    
+    @Override
+
+    public int compareTo(ComplexNumber<?, ?> o)
+        
+    {
+        if(this.modul().equals(o.modul()))
+        {
+            return 0;
+        }
+        
+        else if(this.modul()>o.modul())
+        {
+            return 1;
+        }
+        
+        else
+        {
+            return -1;
+        }
+    }
+    
+    @Override
+    
+    public String toString()
+    {
+        DecimalFormat formatter=new DecimalFormat("#0.00");
+        StringBuilder sb=new StringBuilder();
+        sb.append(formatter.format(real));
+        
+        if(imaginary.doubleValue()>=0.0)
+        	sb.append("+");
+        
+        sb.append(formatter.format(imaginary));
+        sb.append("i");
+        
+        return sb.toString();
+    }
+    
+    
+}
 
 public class ComplexNumberTest {
 
-    public static void main(String[] args) {
-        Scanner jin = new Scanner(System.in);
-        int k = jin.nextInt();
-        if ( k == 0 ) { //test simple functions int
-            int r = jin.nextInt();int i = jin.nextInt();
-            ComplexNumber<Integer, Integer> c = new ComplexNumber<Integer, Integer>(r, i);
-            System.out.println(c);
-            System.out.println(c.getReal());
-            System.out.println(c.getImaginary());
-            System.out.println(c.modul());
-        }
-        if ( k == 1 ) { //test simple functions float
-            float r = jin.nextFloat();
-            float i = jin.nextFloat();
-            ComplexNumber<Float, Float> c = new ComplexNumber<Float, Float>(r, i);
-            System.out.println(c);
-            System.out.println(c.getReal());
-            System.out.println(c.getImaginary());
-            System.out.println(c.modul());
-        }
-        if ( k == 2 ) { //compareTo int
-            LinkedList<ComplexNumber<Integer,Integer>> complex = new LinkedList<ComplexNumber<Integer,Integer>>();
-            while ( jin.hasNextInt() ) {
-                int r = jin.nextInt(); int i = jin.nextInt();
-                complex.add(new ComplexNumber<Integer, Integer>(r, i));
-            }
-            System.out.println(complex);
-            Collections.sort(complex);
-            System.out.println(complex);
-        }
-        if ( k == 3 ) { //compareTo double
-            LinkedList<ComplexNumber<Double,Double>> complex = new LinkedList<ComplexNumber<Double,Double>>();
-            while ( jin.hasNextDouble() ) {
-                double r = jin.nextDouble(); double i = jin.nextDouble();
-                complex.add(new ComplexNumber<Double, Double>(r, i));
-            }
-            System.out.println(complex);
-            Collections.sort(complex);
-            System.out.println(complex);
-        }
-        if ( k == 4 ) { //compareTo mixed
-            LinkedList<ComplexNumber<Double,Integer>> complex = new LinkedList<ComplexNumber<Double,Integer>>();
-            while ( jin.hasNextDouble() ) {
-                double r = jin.nextDouble(); int i = jin.nextInt();
-                complex.add(new ComplexNumber<Double, Integer>(r, i));
-            }
-            System.out.println(complex);
-            Collections.sort(complex);
-            System.out.println(complex);
-        }
-    }
-}
-
-class ComplexNumber<T extends Number, U extends Number> implements Comparable< ComplexNumber< ?,? > >{
-    protected final T real;
-    protected final U imaginary;
-
-    public ComplexNumber(T real, U imaginary) {
-        this.real = real;
-        this.imaginary = imaginary;
-    }
-
-    public T getReal() {
-        return real;
-    }
-
-    public U getImaginary() {
-        return imaginary;
-    }
-
-    public double modul()
-    {
-        return Math.sqrt( Math.pow(real.doubleValue(),2) + Math.pow(imaginary.doubleValue(),2));
-    }
-
-    public int compareTo(ComplexNumber<?, ?> o)
-    {
-        return (int) Math.round(this.modul() - o.modul());
-    }
-
-    public String toString()
-    {
-        DecimalFormat realFormat = new DecimalFormat("#0.00");
-        DecimalFormat imaginaryFormat = new DecimalFormat("+#0.00;-#0.00");
-        return realFormat.format(real) + imaginaryFormat.format(imaginary) + "i";
-    }
+	public static void main(String[] args) {
+		Scanner jin = new Scanner(System.in);
+		int k = jin.nextInt();
+		if ( k == 0 ) { //test simple functions int
+			int r = jin.nextInt();int i = jin.nextInt();
+			ComplexNumber<Integer, Integer> c = new ComplexNumber<Integer, Integer>(r, i);
+			System.out.println(c);
+			System.out.println(c.getReal());
+			System.out.println(c.getImaginary());
+			System.out.println(c.modul());
+		}
+		if ( k == 1 ) { //test simple functions float
+			float r = jin.nextFloat();
+			float i = jin.nextFloat();
+			ComplexNumber<Float, Float> c = new ComplexNumber<Float, Float>(r, i);
+			System.out.println(c);
+			System.out.println(c.getReal());
+			System.out.println(c.getImaginary());
+			System.out.println(c.modul());
+		}
+		if ( k == 2 ) { //compareTo int
+			LinkedList<ComplexNumber<Integer,Integer>> complex = new LinkedList<ComplexNumber<Integer,Integer>>();
+			while ( jin.hasNextInt() ) {
+				int r = jin.nextInt(); int i = jin.nextInt();
+				complex.add(new ComplexNumber<Integer, Integer>(r, i));
+			}
+			System.out.println(complex);
+			Collections.sort(complex);
+			System.out.println(complex);
+		}
+		if ( k == 3 ) { //compareTo double
+			LinkedList<ComplexNumber<Double,Double>> complex = new LinkedList<ComplexNumber<Double,Double>>();
+			while ( jin.hasNextDouble() ) {
+				double r = jin.nextDouble(); double i = jin.nextDouble();
+				complex.add(new ComplexNumber<Double, Double>(r, i));
+			}
+			System.out.println(complex);
+			Collections.sort(complex);
+			System.out.println(complex);
+		}
+		if ( k == 4 ) { //compareTo mixed
+			LinkedList<ComplexNumber<Double,Integer>> complex = new LinkedList<ComplexNumber<Double,Integer>>();
+			while ( jin.hasNextDouble() ) {
+				double r = jin.nextDouble(); int i = jin.nextInt();
+				complex.add(new ComplexNumber<Double, Integer>(r, i));
+			}
+			System.out.println(complex);
+			Collections.sort(complex);
+			System.out.println(complex);
+		}
+	}
 }

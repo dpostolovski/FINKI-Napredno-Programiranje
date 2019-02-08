@@ -1,184 +1,310 @@
-import java.util.*;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.LinkedHashMap;
+import java.util.Iterator;
 
-public class PizzaOrderTest {
-
-    public abstract static class Item
+class InvalidPizzaTypeException extends Exception
+{
+    public InvalidPizzaTypeException()
     {
-        private final String name;
+        super("Invalid pizza type");
+    }
+}
 
-        public Item(String name) {
-            this.name = name;
-        }
+class InvalidExtraTypeException extends Exception
+{
+    public InvalidExtraTypeException()
+    {
+        super("Invalid extra item type");
+    }
+}
 
+class ItemOutOfStockException extends Exception
+{
+    private ItemOutOfStockException cause;
 
-        public abstract int getPrice();
-
-        @Override
-        public int hashCode() {
-            return name.hashCode();
-        }
+    public ItemOutOfStockException()
+    {
+        super("Item out of stock");
     }
 
-    public final static class InvalidPizzaTypeException extends Exception
+    /*public ItemOutOfStockException(Item item);
     {
+        super("Item out of stock");
+    }*/
+}
+
+class OrderLockedException extends Exception
+{
+    public OrderLockedException()
+    {
+        super("Order is locked");
     }
 
-    public final static class InvalidExtraTypeException extends Exception
+}
+
+class EmptyOrder extends Exception
+{
+    public EmptyOrder()
     {
+        super("Order is empty");
+    }
+}
+
+interface Item
+{
+    public int getPrice();
+
+    public String getType();
+}
+
+class PizzaItem implements Item
+{
+    private String type;
+    private static String[] validTypes={"Standard", "Pepperoni", "Vegetarian"};
+    private static int[] priceList={10, 12, 8};
+
+    public PizzaItem()
+    {
+
     }
 
-    public final static class OrderLockedException extends Exception
+    public PizzaItem(String type)
+            throws InvalidPizzaTypeException
     {
-    }
+        this();
 
-    public final static class EmptyOrder extends Exception
-    {
-    }
+        boolean isValid=false;
 
-    public final static class ItemOutOfStockException extends Exception
-    {
-        public ItemOutOfStockException(Item item) {
-        }
-    }
-
-
-
-    public static final class PizzaItem extends Item
-    {
-        private static Map<String, Integer> prices = createMenu();
-
-        private static Map<String,Integer> createMenu()
+        for(String validType: this.validTypes)
         {
-            Map<String,Integer> menu = new HashMap<String,Integer>();
-            menu.put("Standard",10);
-            menu.put("Pepperoni",12);
-            menu.put("Vegetarian",8);
-            return menu;
-        }
-
-        public PizzaItem(String name) throws Exception {
-            super(name);
-            if (!prices.containsKey(name))
-                throw new InvalidPizzaTypeException();
-        }
-
-        @Override
-        public int getPrice() {
-            return prices.get(super.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return super.name.hashCode();
-        }
-
-
-        public boolean equals(Object i) {
-            return super.name.equals( ((Item) i).name);
-        }
-    }
-
-    public static final class ExtraItem extends Item
-    {
-        private static Map<String, Integer> prices = createMenu();
-
-        private static Map<String,Integer> createMenu()
-        {
-            Map<String,Integer> menu = new HashMap<String,Integer>();
-            menu.put("Ketchup",3);
-            menu.put("Coke",5);
-            return menu;
-        }
-
-        public ExtraItem(String name) throws Exception {
-            super(name);
-            if (!prices.containsKey(name))
-                throw new InvalidExtraTypeException();
-        }
-
-        @Override
-        public int getPrice() {
-            return prices.get(super.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return super.name.hashCode();
-        }
-
-        public boolean equals(Object i) {
-            return super.name.equals( ((Item) i).name);
-        }
-    }
-
-    public static class Order
-    {
-        private Map<Item, Integer> bucket = new LinkedHashMap<>();
-        private boolean locked = false;
-
-
-        public Order() {
-
-        }
-
-        public void lock() throws Exception
-        {
-            if(bucket.isEmpty())
-                throw new EmptyOrder();
-
-            locked = true;
-        }
-
-
-        public void addItem(Item item, int count) throws Exception
-        {
-            if(locked)
-                throw new OrderLockedException();
-            if(count > 10)
-                throw new ItemOutOfStockException(item);
-
-            bucket.put(item,count);
-        }
-
-        public void displayOrder()
-        {
-            final int i[] ={1};
-            final int total[] = {0};
-
-            bucket.entrySet().forEach( entry -> {
-                System.out.printf("%3d.%-15sx%2d%5d$\n",i[0], entry.getKey().name,entry.getValue(),entry.getKey().getPrice()*entry.getValue());
-                total[0]+=entry.getKey().getPrice() * entry.getValue();
-                i[0]++;
-            } );
-            System.out.printf("%-22s%5d$\n", "Total:", total[0]);
-        }
-
-        public int getPrice()
-        {
-            final int total[] ={0};
-            bucket.forEach((item,count) -> total[0]+= item.getPrice() * count);
-            return total[0];
-        }
-
-        public void removeItem(int idx) throws Exception
-        {
-            if(locked)
-                throw new OrderLockedException();
-            int i=0;
-            if(i > bucket.size())
-                throw new ArrayIndexOutOfBoundsException(idx);
-            for(Map.Entry<Item,Integer> entry : bucket.entrySet())
+            if(type.equals(validType))
             {
-                if(i == idx)
-                {
-                    Item itemToRemove = entry.getKey();
-                    bucket.remove(itemToRemove);
-                    return;
-                }
-                i++;
+                isValid=true;
+                break;
             }
         }
+
+        if(!isValid)
+        {
+            throw new InvalidPizzaTypeException();
+        }
+
+        this.type=type;
+
     }
+
+    @Override
+    public String getType()
+    {
+        return this.type;
+    }
+
+    @Override
+    public int getPrice()
+    {
+        for(int i=0; i<validTypes.length; i++)
+        {
+            if(this.type.equals(validTypes[i]))
+            {
+                return priceList[i];
+            }
+        }
+
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if(obj.getClass()==this.getClass())
+        {
+            PizzaItem rhs=(PizzaItem)obj;
+            return this.type.equals(rhs.type);
+        }
+
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this.type.hashCode();
+    }
+}
+
+class ExtraItem implements Item
+{
+    private String type;
+    private static String[] validTypes={"Ketchup", "Coke"};
+    private static int[] priceList={3, 5};
+
+    public ExtraItem()
+    {
+
+    }
+
+    public ExtraItem(String type)
+        throws InvalidExtraTypeException
+    {
+        this();
+
+        boolean isValid=false;
+
+        for(String validType: validTypes)
+        {
+            if(type.equals(validType))
+            {
+                isValid=true;
+                break;
+            }
+        }
+
+        if(!isValid)
+        {
+            throw new InvalidExtraTypeException();
+        }
+
+        this.type=type;
+    }
+
+    @Override
+    public String getType()
+    {
+        return this.type;
+    }
+
+    @Override
+    public int getPrice()
+    {
+        for (int i=0; i<validTypes.length; i++)
+        {
+            if(this.type.equals(validTypes[i]))
+            {
+                return priceList[i];
+            }
+        }
+
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if(obj.getClass()==this.getClass())
+        {
+            ExtraItem rhs=(ExtraItem)obj;
+            return this.type.equals(rhs.type);
+        }
+
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this.type.hashCode();
+    }
+}
+
+class Order
+{
+    private LinkedHashMap<Item, Integer> orders;
+    private boolean locked;
+
+    public Order()
+    {
+        this.orders=new LinkedHashMap<Item, Integer>();
+        this.locked=false;
+    }
+
+    public void addItem(Item item, int count)
+            throws ItemOutOfStockException, OrderLockedException
+    {
+        if(this.locked)
+        {
+            throw new OrderLockedException();
+        }
+        if(count>10)
+        {
+            throw new ItemOutOfStockException();
+        }
+        this.orders.put(item, count);
+    }
+
+    public void removeItem(int index)
+            throws IndexOutOfBoundsException, OrderLockedException
+    {
+        if(this.locked)
+        {
+            throw new OrderLockedException();
+        }
+        if(this.orders.size()<index)
+        {
+            throw new IndexOutOfBoundsException();
+        }
+        int i=0;
+        for(Map.Entry<Item, Integer> entry : this.orders.entrySet())
+        {
+            if (i==index)
+            {
+                this.orders.remove(entry.getKey());
+                return;
+            }
+
+            i++;
+        }
+    }
+
+    public int getPrice()
+    {
+        int total=0;
+
+        for(Map.Entry<Item, Integer>entry:this.orders.entrySet())
+        {
+            total+=entry.getValue()*entry.getKey().getPrice();
+        }
+
+        return total;
+    }
+
+    public void lock()
+            throws EmptyOrder
+    {
+        if(this.orders.size()<1)
+        {
+            throw new EmptyOrder();
+        }
+        this.locked=true;
+    }
+
+    public void displayOrder()
+    {
+        int i=1;
+        for(Map.Entry<Item, Integer>entry:this.orders.entrySet())
+        {
+            System.out.printf("%3d.", i);
+            System.out.printf("%-15s", entry.getKey().getType());
+            System.out.printf("x%2d", entry.getValue());
+            System.out.printf("%5d$", entry.getValue()*entry.getKey().getPrice());
+            System.out.print("\n");
+            i++;
+        }
+
+        System.out.printf("%-22s","Total:");
+        System.out.printf("%5d$", this.getPrice());
+        System.out.print("\n");
+    }
+
+}
+
+public class PizzaOrderTest {
 
     public static void main(String[] args) {
         Scanner jin = new Scanner(System.in);

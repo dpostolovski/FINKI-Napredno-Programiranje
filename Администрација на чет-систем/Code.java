@@ -1,43 +1,83 @@
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
+class NoSuchRoomException extends RuntimeException
+{
+    public NoSuchRoomException(String message) {
+        super(message);
+    }
+}
+
+class NoSuchUserException extends RuntimeException
+{
+    public NoSuchUserException(String message) {
+        super(message);
+    }
+}
 
 class ChatRoom
 {
     private String name;
-    private Set<String> users = new TreeSet<String>();
+    private TreeSet<String > userList;
 
-    public ChatRoom(String name) {
+    public ChatRoom()
+    {
+        userList = new TreeSet<>();
+    }
+
+    public ChatRoom(String name)
+    {
+        this();
+
         this.name = name;
     }
 
-    public void addUser(String username)
+    public void addUser(String user)
     {
-        users.add(username);
-    }
-    public void removeUser(String username) throws NoSuchUserException
-    {
-        users.remove(username);
-    }
-    public String toString()
-    {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(name + "\n");
-        stringBuilder.append( users.stream().reduce( (s, s2) -> s = s+ "\n" + s2 ).orElse("EMPTY") );
-        stringBuilder.append("\n");
-
-        return stringBuilder.toString();
+        userList.add(user);
     }
 
-    public boolean hasUser(String username)
+    public void removeUser(String user)
     {
-        return users.contains(username);
+        if(hasUser(user))
+        {
+            userList.remove(user);
+        }
     }
 
     public int numUsers()
     {
-        return users.size();
+        return userList.size();
+    }
+
+    public boolean hasUser(String user)
+    {
+        return userList.contains(user);
+    }
+
+    @Override
+
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(name);
+        sb.append('\n');
+
+        if(numUsers()==0)
+        {
+            sb.append("EMPTY");
+            sb.append('\n');
+
+            return sb.toString();
+        }
+
+        userList.stream().forEach(e -> { sb.append(e); sb.append('\n'); });
+
+        return sb.toString();
     }
 
     public String getName() {
@@ -45,118 +85,160 @@ class ChatRoom
     }
 }
 
-class ChatSystem implements UserRegistry, RoomRegistry
+class ChatSystem
 {
-    private Set<String> users = new TreeSet<>();
-    private Map<String, ChatRoom> chatRooms = new TreeMap<>();
+    TreeMap<String, ChatRoom> roomList;
+    TreeMap<String, LinkedHashSet<ChatRoom> > userList;
 
-    public ChatSystem() {
-    }
-
-    @Override
-    public void addRoom(String roomName) {
-        ChatRoom room = new ChatRoom(roomName);
-        chatRooms.put(room.getName(), room);
-    }
-
-    private void checkRoomExists(String roomName) throws NoSuchRoomException
+    public ChatSystem()
     {
-        if(!chatRooms.containsKey(roomName)) throw new NoSuchRoomException();
+        roomList = new TreeMap<>();
+        userList = new TreeMap<>();
     }
 
-    @Override
-    public void removeRoom(String roomName) throws NoSuchRoomException {
-        checkRoomExists(roomName);
-        chatRooms.remove(roomName);
-    }
-
-    @Override
-    public ChatRoom getRoom(String roomName) throws NoSuchRoomException {
-        checkRoomExists(roomName);
-        return chatRooms.get(roomName);
-    }
-
-    @Override
-    public void register(String username) {
-        registerOnly(username);
-
-        Comparator<ChatRoom> chatRoomComparator = Comparator.comparing(ChatRoom::numUsers).thenComparing(ChatRoom::getName);
-        Comparator<Map.Entry<String, ChatRoom>> comparator = Map.Entry.comparingByValue(chatRoomComparator);
-
-
-        chatRooms.entrySet().stream().min(comparator).ifPresent(s->s.getValue().addUser(username) );
-    }
-
-    private void registerOnly(String username)
+    public void addRoom(String roomName)
     {
-        users.add(username);
+        roomList.putIfAbsent(roomName, new ChatRoom(roomName));
     }
 
-    @Override
-    public boolean userExists(String username) {
-        return users.contains(username);
-    }
-
-    public void registerAndJoin(String userName, String roomName) throws NoSuchUserException, NoSuchRoomException {
-        registerOnly(userName);
-        joinRoom(userName, roomName);
-    }
-
-    public void joinRoom(String userName, String roomName) throws NoSuchRoomException, NoSuchUserException {
-        checkUserExists(userName);
-        getRoom(roomName).addUser(userName);
-    }
-
-    private void checkUserExists(String userName) throws NoSuchUserException
+    public void removeRoom(String roomName)
     {
-        if(!userExists(userName)) throw new NoSuchUserException();
+        if(roomList.containsKey(roomName))
+        {
+            ChatRoom tmp = roomList.remove(roomName);
+            userList.entrySet().stream()
+                               .map(Map.Entry::getValue)
+                               .filter(e -> e.contains(tmp))
+                               .forEach(e -> e.remove(tmp));
+        }
     }
 
-    public void leaveRoom(String username, String roomName) throws NoSuchRoomException, NoSuchUserException {
-        checkUserExists(username);
-        getRoom(roomName).removeUser(username);
+    public ChatRoom getRoom(String roomName)
+            throws NoSuchRoomException
+    {
+        ChatRoom tmp = roomList.entrySet().stream()
+                                  .map(Map.Entry::getValue)
+                                  .filter(e -> e.getName().equals(roomName))
+                                  .findFirst()
+                                  .get();
+
+        if(tmp==null)
+            throw new NoSuchRoomException(roomName);
+
+        return tmp;
     }
 
-    public void followFriend(String username, String friend_username) throws NoSuchElementException, NoSuchUserException {
-        checkUserExists(username);
-        checkUserExists(friend_username);
+    public void register(String userName)
+    {
+        ChatRoom tmp = roomList.values().stream()
+                                        .min((Comparator.comparing(ChatRoom::numUsers).thenComparing(ChatRoom::getName)))
+                                        .orElse(null);
 
-        chatRooms.entrySet()
-                .stream()
-                .filter( stringChatRoomEntry -> stringChatRoomEntry.getValue().hasUser(friend_username))
-                .forEach( stringChatRoomEntry -> stringChatRoomEntry.getValue().addUser(username) );
+    if(tmp!=null)
+        tmp.addUser(userName);
+
+        userList.computeIfAbsent(userName, k -> new LinkedHashSet<>());
+    if(tmp!=null)
+        userList.computeIfPresent(userName, (k, v) -> { v.add(tmp); return v;});
+
+
     }
 
-}
+    public void registerAndJoin(String userName, String roomName)
+    {
+       ChatRoom tmp = roomList.entrySet().stream()
+                           .filter(e -> e.getKey().equals(roomName))
+                           .map(Map.Entry::getValue)
+                           .findFirst()
+                           .orElse(null);
+
+       if(tmp!=null)
+       {
+           tmp.addUser(userName);
+
+           userList.computeIfAbsent(userName, k -> new LinkedHashSet<>());
+
+           userList.computeIfPresent(userName, (k, v) -> { v.add(tmp); return v;});
+       }
+
+       /*System.out.println("DEBUG: "+userName);
+
+       userList.entrySet().stream()
+                          .filter(e -> e.getKey().equals(userName))
+                          .map(Map.Entry::getValue)
+                          .forEach(System.out::println);*/
+    }
+
+    public void joinRoom(String userName, String roomName)
+            throws NoSuchRoomException, NoSuchUserException
+    {
+        ChatRoom tmp = roomList.entrySet().stream()
+                .filter(e -> e.getKey().equals(roomName))
+                .map(e -> e.getValue())
+                .findFirst()
+                .get();
+
+        if(tmp==null)
+            throw  new NoSuchRoomException(roomName);
+
+        tmp.addUser(userName);
+
+        userList.computeIfAbsent(userName, k -> new LinkedHashSet<>());
+
+        userList.computeIfPresent(userName, (k, v) -> { v.add(tmp); return v; });
+    }
+
+    public void leaveRoom(String userName, String roomName)
+    {
+        ChatRoom tmp = roomList.entrySet().stream()
+                .filter(e -> e.getKey().equals(roomName))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .get();
+
+        if(tmp==null)
+            throw  new NoSuchRoomException(roomName);
 
 
-interface RoomRegistry
-{
-    public void addRoom(String roomName);
+        /*if(!tmp.hasUser(userName))
+            throw new NoSuchUserException(userName);*/
 
-    public void removeRoom(String roomName) throws NoSuchRoomException;
+        tmp.removeUser(userName);
 
-    public ChatRoom getRoom(String roomName) throws NoSuchRoomException;
-}
+        userList.entrySet().stream()
+                           .filter(e -> e.getKey().equals(userName))
+                           .forEach(e -> e.getValue().remove(tmp));
 
-interface UserRegistry
-{
-    public void register(String username);
-    public boolean userExists(String username);
-}
+    }
+
+    public void followFriend(String userName, String friendUserName)
+            throws NoSuchUserException
+    {
+       /* if (!userList.containsKey(friendUserName))
+            throw new NoSuchUserException(friendUserName);*/
+       
+        List<ChatRoom> friendRooms = userList.entrySet().stream()
+                                                        .filter(e -> e.getKey().equals(friendUserName))
+                                                        .map(Map.Entry::getValue)
+                                                        .flatMap(Collection::stream)
+                                                        .collect(Collectors.toList());
+
+        userList.computeIfAbsent(userName, k -> new LinkedHashSet<>());
+        
+        friendRooms.stream()
+                    .forEach(e -> { userList.computeIfPresent(userName, (k, v) -> { v.add(e); return v; }); e.addUser(userName);});
+        
 
 
-class NoSuchRoomException extends Exception
-{
-}
+    }
 
-class NoSuchUserException extends Exception
-{
+
+
 }
 
 public class ChatSystemTest {
 
-    public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchRoomException, NoSuchUserException {
+    public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchRoomException {
         Scanner jin = new Scanner(System.in);
         int k = jin.nextInt();
         if ( k == 0 ) {
@@ -193,11 +275,14 @@ public class ChatSystemTest {
                 for ( Method m : mts ) {
                     if ( m.getName().equals(cmd) ) {
                         String params[] = new String[m.getParameterTypes().length];
+
+
                         for ( int i = 0 ; i < params.length ; ++i ) params[i] = jin.next();
-                        m.invoke(cs,params);
+                        m.invoke(cs,(Object[]) params);
                     }
                 }
             }
         }
     }
+
 }
